@@ -1,26 +1,36 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --color-ink: #111111;
+  --color-paper: #ffffff;
+  --color-mist: #f2f2f2;
+  --color-line: #e3e3e3;
+  --color-muted: #6b6b6b;
+  --color-accent: #e30613;
+  --font-sans: var(--font-barlow), var(--font-thai), Arial, sans-serif;
+  --font-display: var(--font-barlow-condensed), var(--font-thai), Arial, sans-serif;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--color-paper);
+  color: var(--color-ink);
+}
+
+@utility btn {
+  @apply inline-flex items-center justify-center gap-2 rounded-full px-6 py-3 text-sm font-semibold transition-colors disabled:opacity-50;
+}
+@utility btn-dark {
+  @apply btn bg-ink text-white hover:bg-black/80;
+}
+@utility btn-light {
+  @apply btn bg-white text-ink hover:bg-white/85;
+}
+@utility btn-outline {
+  @apply btn border border-ink text-ink hover:bg-ink hover:text-white;
+}
+@utility input {
+  @apply w-full rounded-lg border border-line bg-white px-4 py-3 text-sm outline-none focus:border-ink;
+}
+@utility label {
+  @apply mb-1.5 block text-sm font-medium;
 }

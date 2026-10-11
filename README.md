@@ -1,36 +1,40 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Ridelab — ร้านจักรยาน Canyon (โปรเจกต์ฝึก)
 
-## Getting Started
+Next.js 16 + TypeScript + Tailwind CSS + Supabase
 
-First, run the development server:
+## รันบนเครื่อง
 
 ```bash
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+แล้วเปิด http://localhost:3000 (ต้องมีไฟล์ `.env.local` ที่ใส่ `NEXT_PUBLIC_SUPABASE_URL` และ `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`)
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## โครงสร้างไฟล์ที่สำคัญ
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+| ไฟล์/โฟลเดอร์ | หน้าที่ |
+|---|---|
+| `src/app/page.tsx` | หน้าแรก (สไตล์ canyon.com) |
+| `src/app/bikes/` | หน้ารวมจักรยาน (กรองตามหมวด) + หน้ารายละเอียด |
+| `src/app/cart/` | ตะกร้า + สั่งซื้อ (ไม่มีการจ่ายเงินจริง) |
+| `src/app/(auth)/` | login / register / ลืมรหัสผ่าน / ตั้งรหัสใหม่ |
+| `src/app/admin/` | Dashboard ยอดขาย + จัดการสต็อก (เฉพาะ admin) |
+| `src/lib/mockSales.ts` | **ข้อมูลยอดขายจำลอง** (แก้ตรงนี้ถ้าจะเปลี่ยนตัวเลข) |
+| `src/proxy.ts` | ต่ออายุ session login + กันหน้าที่ต้อง login |
+| `supabase/migrations/` | SQL ที่ใช้สร้างตาราง (เก็บไว้เป็นประวัติ) |
 
-## Learn More
+## ตั้งใครเป็นแอดมิน
 
-To learn more about Next.js, take a look at the following resources:
+สมัครสมาชิกบนเว็บก่อน แล้วรันใน Supabase → SQL Editor:
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```sql
+update public.profiles set role = 'admin'
+where id = (select id from auth.users where email = 'อีเมลของคุณ');
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## ข้อมูล
 
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- สินค้า / หมวดหมู่ / สต็อก / ผู้ใช้ / คำสั่งซื้อ = ข้อมูลจริงใน Supabase
+- ยอดขายใน Dashboard = ข้อมูลจำลอง (`src/lib/mockSales.ts`)
+- รูปภาพลิงก์ตรงจาก CDN ของ canyon.com — ใช้เพื่อการศึกษาเท่านั้น ไม่ได้เกี่ยวข้องกับ Canyon Bicycles GmbH

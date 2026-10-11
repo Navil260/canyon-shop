@@ -1,28 +1,38 @@
 "use client";
 
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
+import type { BuildLine, BuildSelection } from "@/lib/types";
 
 export type CartItem = {
+  lineId: string; // product + size + build, so different builds are separate lines
   productId: string;
   slug: string;
   name: string;
-  priceUsd: number;
+  size: string;
+  priceUsd: number; // display only; the database recalculates at checkout
   imageId: string;
+  imageUrl?: string; // custom builds: render in the chosen colour
   quantity: number;
+  build?: BuildSelection;
+  buildLines?: BuildLine[];
 };
 
 type CartContextValue = {
   items: CartItem[];
   count: number;
   total: number;
-  add: (item: Omit<CartItem, "quantity">) => void;
-  setQuantity: (productId: string, quantity: number) => void;
-  remove: (productId: string) => void;
+  add: (item: Omit<CartItem, "quantity" | "lineId">) => void;
+  setQuantity: (lineId: string, quantity: number) => void;
+  remove: (lineId: string) => void;
   clear: () => void;
 };
 
 const CartContext = createContext<CartContextValue | null>(null);
-const STORAGE_KEY = "cart";
+const STORAGE_KEY = "cart-v2"; // v2: items carry size + build
+
+function lineIdFor(item: Omit<CartItem, "quantity" | "lineId">) {
+  return [item.productId, item.size, item.build ? JSON.stringify(item.build) : ""].join("|");
+}
 
 // The cart lives in the browser (localStorage) until the customer checks out.
 export function CartProvider({ children }: { children: ReactNode }) {
@@ -51,19 +61,15 @@ export function CartProvider({ children }: { children: ReactNode }) {
     total: items.reduce((sum, i) => sum + i.quantity * i.priceUsd, 0),
     add: (item) =>
       setItems((prev) => {
-        const existing = prev.find((i) => i.productId === item.productId);
-        if (existing) {
-          return prev.map((i) =>
-            i.productId === item.productId ? { ...i, quantity: i.quantity + 1 } : i,
-          );
+        const lineId = lineIdFor(item);
+        if (prev.some((i) => i.lineId === lineId)) {
+          return prev.map((i) => (i.lineId === lineId ? { ...i, quantity: i.quantity + 1 } : i));
         }
-        return [...prev, { ...item, quantity: 1 }];
+        return [...prev, { ...item, lineId, quantity: 1 }];
       }),
-    setQuantity: (productId, quantity) =>
-      setItems((prev) =>
-        prev.map((i) => (i.productId === productId ? { ...i, quantity: Math.max(1, quantity) } : i)),
-      ),
-    remove: (productId) => setItems((prev) => prev.filter((i) => i.productId !== productId)),
+    setQuantity: (lineId, quantity) =>
+      setItems((prev) => prev.map((i) => (i.lineId === lineId ? { ...i, quantity: Math.max(1, quantity) } : i))),
+    remove: (lineId) => setItems((prev) => prev.filter((i) => i.lineId !== lineId)),
     clear: () => setItems([]),
   };
 

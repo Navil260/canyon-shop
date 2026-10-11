@@ -23,7 +23,7 @@ export default function CartPage() {
       return;
     }
     const { data: orderId, error } = await supabase.rpc("place_order", {
-      items: items.map((i) => ({ product_id: i.productId, quantity: i.quantity })),
+      items: items.map((i) => ({ product_id: i.productId, size: i.size, quantity: i.quantity, build: i.build ?? null })),
     });
     setPlacing(false);
     if (error) {
@@ -51,23 +51,36 @@ export default function CartPage() {
       <div className="mt-8 grid gap-10 lg:grid-cols-[1fr_360px]">
         <ul className="divide-y divide-line border-y border-line">
           {items.map((item) => (
-            <li key={item.productId} className="flex gap-4 py-5">
+            <li key={item.lineId} className="flex gap-4 py-5">
               <Link href={`/bikes/${item.slug}`} className="w-32 shrink-0 rounded-lg bg-mist p-2 sm:w-44">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={bikeImage(item.imageId, 400)} alt={item.name} className="w-full" />
+                <img src={item.imageUrl ?? bikeImage(item.imageId, 400)} alt={item.name} className="w-full" />
               </Link>
               <div className="flex flex-1 flex-col">
                 <Link href={`/bikes/${item.slug}`} className="font-display text-xl font-bold uppercase">{item.name}</Link>
-                <p className="text-sm text-muted">{usd(item.priceUsd)} / คัน</p>
+                <p className="text-sm text-muted">ไซซ์ {item.size} · {usd(item.priceUsd)} / คัน</p>
+                {item.buildLines && (
+                  <details className="mt-1 text-sm">
+                    <summary className="cursor-pointer text-muted">ดูสเปกที่แต่ง</summary>
+                    <ul className="mt-1 space-y-0.5 text-xs text-muted">
+                      {item.buildLines.map((l) => (
+                        <li key={l.step}>
+                          <span className="font-medium text-ink">{l.step}:</span> {l.value}
+                          {l.price > 0 && ` (+${usd(l.price)})`}
+                        </li>
+                      ))}
+                    </ul>
+                  </details>
+                )}
                 <div className="mt-auto flex items-center justify-between pt-3">
                   <div className="flex items-center rounded-full border border-line">
-                    <button className="px-3 py-1" onClick={() => setQuantity(item.productId, item.quantity - 1)} aria-label="ลดจำนวน">−</button>
+                    <button className="px-3 py-1" onClick={() => setQuantity(item.lineId, item.quantity - 1)} aria-label="ลดจำนวน">−</button>
                     <span className="w-8 text-center text-sm">{item.quantity}</span>
-                    <button className="px-3 py-1" onClick={() => setQuantity(item.productId, item.quantity + 1)} aria-label="เพิ่มจำนวน">+</button>
+                    <button className="px-3 py-1" onClick={() => setQuantity(item.lineId, item.quantity + 1)} aria-label="เพิ่มจำนวน">+</button>
                   </div>
                   <div className="text-right">
                     <p className="font-semibold">{usd(item.priceUsd * item.quantity)}</p>
-                    <button className="text-xs text-muted underline" onClick={() => remove(item.productId)}>ลบ</button>
+                    <button className="text-xs text-muted underline" onClick={() => remove(item.lineId)}>ลบ</button>
                   </div>
                 </div>
               </div>

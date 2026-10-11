@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { bikeImage, stockStatus, usd } from "@/lib/format";
-import type { Category, Product } from "@/lib/types";
+import type { Category, Product, ProductSize } from "@/lib/types";
 import { updateStock } from "./actions";
 
 const FILTERS = [
@@ -16,10 +16,12 @@ export default async function InventoryPage({ searchParams }: PageProps<"/admin/
   const category = typeof params.category === "string" ? params.category : "";
 
   const supabase = await createClient();
-  const [{ data: cats }, { data }] = await Promise.all([
+  const [{ data: cats }, { data }, { data: sizeData }] = await Promise.all([
     supabase.from("categories").select("*").order("sort"),
     supabase.from("products").select("*").order("category_slug").order("name"),
+    supabase.from("product_sizes").select("*").order("sort"),
   ]);
+  const sizesOf = (productId: string) => ((sizeData ?? []) as ProductSize[]).filter((s) => s.product_id === productId);
   const categories = (cats ?? []) as Category[];
   let products = (data ?? []) as Product[];
   if (category) products = products.filter((p) => p.category_slug === category);
@@ -34,7 +36,7 @@ export default async function InventoryPage({ searchParams }: PageProps<"/admin/
   return (
     <div>
       <h1 className="font-display text-4xl font-extrabold uppercase">สต็อกสินค้า</h1>
-      <p className="mt-1 text-sm text-muted">แก้จำนวนคงเหลือ และจุดแจ้งเตือน “ใกล้หมด” ของแต่ละรุ่น แล้วกดบันทึก</p>
+      <p className="mt-1 text-sm text-muted">แก้จำนวนคงเหลือแยกตามไซซ์ และจุดแจ้งเตือน “ใกล้หมด” (ใช้กับยอดรวม) แล้วกดบันทึก</p>
 
       <div className="mt-6 flex flex-wrap gap-2 text-sm">
         {FILTERS.map((f) => (
@@ -52,13 +54,13 @@ export default async function InventoryPage({ searchParams }: PageProps<"/admin/
       </div>
 
       <div className="mt-6 overflow-x-auto rounded-2xl border border-line">
-        <table className="w-full min-w-[720px] text-sm">
+        <table className="w-full min-w-[960px] text-sm">
           <thead className="bg-mist text-left text-xs uppercase text-muted">
             <tr>
               <th className="px-4 py-3">สินค้า</th>
               <th className="px-4 py-3">ราคา</th>
               <th className="px-4 py-3">สถานะ</th>
-              <th className="px-4 py-3">คงเหลือ</th>
+              <th className="px-4 py-3">คงเหลือแยกไซซ์</th>
               <th className="px-4 py-3">แจ้งเตือนเมื่อ ≤</th>
               <th className="px-4 py-3" />
             </tr>
@@ -81,10 +83,25 @@ export default async function InventoryPage({ searchParams }: PageProps<"/admin/
                   </td>
                   <td className="px-4 py-3 tabular-nums">{usd(p.price_usd)}</td>
                   <td className="px-4 py-3">
-                    <span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${s.tone}`}>{s.label}</span>
+                    <span className={`whitespace-nowrap rounded-full px-2.5 py-1 text-xs font-semibold ${s.tone}`}>{s.label} · {p.stock}</span>
                   </td>
                   <td className="px-4 py-3">
-                    <input form={formId} name="stock" type="number" min={0} defaultValue={p.stock} className="input w-20 py-1.5" aria-label={`จำนวนคงเหลือ ${p.name}`} />
+                    <div className="flex gap-1.5">
+                      {sizesOf(p.id).map((sz) => (
+                        <label key={sz.size} className="text-center text-[11px] text-muted">
+                          {sz.size}
+                          <input
+                            form={formId}
+                            name={`size:${sz.size}`}
+                            type="number"
+                            min={0}
+                            defaultValue={sz.stock}
+                            className={`input mt-0.5 w-12 px-1 py-1 text-center ${sz.stock === 0 ? "border-red-300 bg-red-50" : ""}`}
+                            aria-label={`${p.name} ไซซ์ ${sz.size}`}
+                          />
+                        </label>
+                      ))}
+                    </div>
                   </td>
                   <td className="px-4 py-3">
                     <input form={formId} name="threshold" type="number" min={0} defaultValue={p.low_stock_threshold} className="input w-20 py-1.5" aria-label={`จุดแจ้งเตือน ${p.name}`} />

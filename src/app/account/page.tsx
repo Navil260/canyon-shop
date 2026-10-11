@@ -8,7 +8,13 @@ type OrderRow = {
   total_usd: number;
   status: string;
   created_at: string;
-  order_items: { quantity: number; unit_price_usd: number; products: { name: string } }[];
+  order_items: {
+    quantity: number;
+    unit_price_usd: number;
+    size: string | null;
+    build: { step: string; value: string; price: number }[] | null;
+    products: { name: string };
+  }[];
 };
 
 export default async function AccountPage({ searchParams }: PageProps<"/account">) {
@@ -19,7 +25,7 @@ export default async function AccountPage({ searchParams }: PageProps<"/account"
   const supabase = await createClient();
   const { data } = await supabase
     .from("orders")
-    .select("id, total_usd, status, created_at, order_items(quantity, unit_price_usd, products(name))")
+    .select("id, total_usd, status, created_at, order_items(quantity, unit_price_usd, size, build, products(name))")
     .eq("user_id", user.id)
     .order("created_at", { ascending: false });
   const orders = (data ?? []) as unknown as OrderRow[];
@@ -45,9 +51,17 @@ export default async function AccountPage({ searchParams }: PageProps<"/account"
               </div>
               <ul className="mt-3 space-y-1 text-sm">
                 {o.order_items.map((i, idx) => (
-                  <li key={idx} className="flex justify-between">
-                    <span>{i.products.name} × {i.quantity}</span>
-                    <span>{usd(i.unit_price_usd * i.quantity)}</span>
+                  <li key={idx}>
+                    <div className="flex justify-between">
+                      <span>
+                        {i.build && "Custom "}{i.products.name}
+                        {i.size && <span className="text-muted"> · ไซซ์ {i.size}</span>} × {i.quantity}
+                      </span>
+                      <span>{usd(i.unit_price_usd * i.quantity)}</span>
+                    </div>
+                    {i.build && (
+                      <p className="mt-0.5 text-xs text-muted">{i.build.map((b) => `${b.step}: ${b.value}`).join(" · ")}</p>
+                    )}
                   </li>
                 ))}
               </ul>

@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { ProductCard } from "@/components/ProductCard";
 import { bikeImage, stockStatus, usd } from "@/lib/format";
-import type { Product } from "@/lib/types";
+import type { Product, ProductSize } from "@/lib/types";
 import { AddToCart } from "./AddToCart";
 
 export default async function BikePage({ params }: PageProps<"/bikes/[slug]">) {
@@ -12,6 +12,9 @@ export default async function BikePage({ params }: PageProps<"/bikes/[slug]">) {
   const { data } = await supabase.from("products").select("*, categories(name)").eq("slug", slug).single();
   if (!data) notFound();
   const product = data as Product & { categories: { name: string } };
+
+  const { data: sizeData } = await supabase.from("product_sizes").select("*").eq("product_id", product.id).order("sort");
+  const sizes = (sizeData ?? []) as ProductSize[];
 
   const { data: relatedData } = await supabase
     .from("products")
@@ -53,7 +56,7 @@ export default async function BikePage({ params }: PageProps<"/bikes/[slug]">) {
           </p>
 
           <div className="mt-8">
-            <AddToCart product={product} />
+            <AddToCart product={product} sizes={sizes} />
           </div>
 
           <dl className="mt-10 divide-y divide-line border-y border-line text-sm">

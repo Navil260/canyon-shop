@@ -2,6 +2,8 @@
 
 Next.js 16 + TypeScript + Tailwind CSS + Supabase
 
+> 📄 **อ่าน [HANDOFF.md](HANDOFF.md) ก่อน** — สรุปทั้งโปรเจกต์: วิธีติดตั้ง, ฐานข้อมูล, ระบบ customise, สิ่งที่ยังไม่ได้ทำ
+
 ## รันบนเครื่อง
 
 ```bash
@@ -17,6 +19,8 @@ npm run dev
 |---|---|
 | `src/app/page.tsx` | หน้าแรก (สไตล์ canyon.com) |
 | `src/app/bikes/` | หน้ารวมจักรยาน (กรองตามหมวด) + หน้ารายละเอียด |
+| `src/app/bikes/[slug]/customise/` | หน้าแต่งรถแบบ MyCanyon (ตอนนี้มีเฉพาะ Aeroad CFR Di2) |
+| `supabase/data/*-customization.json` | ตัวเลือก customise (สี/ล้อ/แฮนด์ ฯลฯ + ราคาบวกเพิ่ม) |
 | `src/app/cart/` | ตะกร้า + สั่งซื้อ (ไม่มีการจ่ายเงินจริง) |
 | `src/app/(auth)/` | login / register / ลืมรหัสผ่าน / ตั้งรหัสใหม่ |
 | `src/app/admin/` | Dashboard ยอดขาย + จัดการสต็อก (เฉพาะ admin) |

@@ -9,6 +9,14 @@ export function bannerImage(imageId: string, width = 1600) {
   return `${IMG_BASE}/w_${width},c_fill/f_auto/q_auto/${imageId}`;
 }
 
+// Canyon's layered render of a customised bike. Close-up views (e.g. "_CP_24" cockpit)
+// are only served with the exact transformation Canyon uses itself.
+export function customRender(path: string, view?: string, width = 1400) {
+  return view
+    ? `${IMG_BASE}/w_1920/f_avif/${path}${view}`
+    : `${IMG_BASE}/w_${width}/f_auto/q_auto/${path}`;
+}
+
 export function usd(amount: number) {
   return `US$ ${Math.round(amount).toLocaleString("en-US")}`;
 }
